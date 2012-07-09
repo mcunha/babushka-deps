@@ -11,7 +11,7 @@ dep 'wget.managed' do
   provides "wget"
 end
 
-def 'ruby headers.managed' do
+dep 'ruby headers.managed' do
   installs {
     via :apt, 'ruby-dev'
   }
