@@ -3,7 +3,7 @@ def ssh_conf_path file
 end
 
 dep 'system', :hostname_str do
-  requires 'hostname'.with(hostname_str), 'tmp cleaning grace period', 'core software'
+  requires 'hostname'.with(:hostname_str => hostname_str), 'tmp cleaning grace period', 'core software'
 end
 
 dep 'secured system' do

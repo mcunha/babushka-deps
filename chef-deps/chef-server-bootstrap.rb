@@ -3,10 +3,6 @@ meta :chef do
     File.expand_path("~/chef.json")
   end
 
-  def hostname
-    var(:hostname_str, :default => shell('hostname -f'))
-  end
-
   def is_listening_on_port?(port)
     shell "netstat -an | grep -E '^tcp.*[.:]#{port} +.*LISTEN'"
   end
@@ -42,29 +38,32 @@ meta :chef do
   end
 end
 
-dep('bootstrap chef server with rubygems') {
-  define_var(:chef_version, :defailt => "0.10.0", :message => "What version of Chef do you want to install?")
-
+dep('bootstrap chef server with rubygems', :chef_version, :hostname) {
+  chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
+  hostname.default(shell('hostname -f'))
   requires [
-    'hostname',
+    'hostname'.with(:hostname_str => hostname),
     'ruby',
     'chef install dependencies.managed',
     'rubygems',
     'rubygems with no docs',
-    'gems.chef',
+    'gems.chef'.with(:chef_version => chef_version),
     'chef solo configuration.chef',
-    'chef bootstrap configuration.chef',
-    'bootstrapped chef installed.chef',
+    'chef bootstrap configuration.chef'.with(:hostname => hostname),
+    'bootstrapped chef installed.chef'.with(:chef_version => chef_version, :server_install => true),
     'local admin client.registered'
   ]
 
   setup {
-    set :server_install, true
     unmeetable "This dep cannot be run as root. Please run as your chef user, which can be setup using the dep 'chef user'" if shell('whoami') == 'root'
   }
 }
 
-dep('bootstrapped chef') { requires 'bootstrap chef server with rubygems' }
+dep('bootstrapped chef', :chef_version, :hostname) { 
+  chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
+  hostname.default(shell('hostname -f'))
+  requires 'bootstrap chef server with rubygems'.with(:chef_version => chef_version, :hostaname => hostname)
+}
 
 dep('rubygems with no docs') {
   met? {
@@ -87,7 +86,8 @@ dep('gems.chef', :chef_version) {
 }
 
 dep('chef.gem', :chef_version){
-  installs "chef #{var(:chef_version, :default => '0.10.4')}"
+  chef_version.default!(0.10.10)
+  installs "chef #{chef_version}"
   provides 'chef-client'
 }
 
@@ -103,20 +103,18 @@ dep('chef solo configuration.chef') {
   }
 }
 
-dep('chef bootstrap configuration.chef') {
+dep('chef bootstrap configuration.chef', :init_style, :hostname) {
+  hostname.default(shell('hostname -f'))
   require "rubygems"
   require "json"
 
-  define_var :init_style,
-    :message => "Which init style would you like to use?",
-    :default => 'init',
-    :choice_descriptions => {
+  init_style.choose({
       'init' => 'Uses init scripts that are included in the chef gem. Logs will be in /var/log/chef. Only usable with debian/ubuntu and red hat family distributions.',
       'runit' => 'Uses runit to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
       'bluepill' => 'Uses bluepill to set up the service.',
       'daemontools' => 'uses daemontools to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
       'bsd' => 'Prints a message with the chef-client command to use in rc.local.'
-    }
+    }).ask("Which init style would you like to use?")default("init")
 
   met?{ File.exists?(chef_json_path) }
   meet {
@@ -125,7 +123,7 @@ dep('chef bootstrap configuration.chef') {
         "server_url"=>"http://localhost:4000",
         "server_fqdn"=> hostname,
         "webui_enabled"=> web_ui_enabled?,
-        "init_style"=> var(:init_style),
+        "init_style"=> init_style,
         "client_interval"=>1800
       },
       "run_list"=>["recipe[chef::bootstrap_server]"]
@@ -138,20 +136,20 @@ dep('chef bootstrap configuration.chef') {
   }
 }
 
-dep('bootstrapped chef installed.chef') {
+dep('bootstrapped chef installed.chef', :chef_version, :server_install) {
   meet {
     log_shell "Downloading and running bootstrap",
-        "chef-solo -c /etc/chef/solo.rb -j ~/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-#{var(:chef_version)}.tar.gz",
+        "chef-solo -c /etc/chef/solo.rb -j ~/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-#{chef_version}.tar.gz",
         :spinner => true,
         :sudo => !File.writable?("/etc/chef/solo.rb")
   }
 
   met?{
-    success = in_path?("chef-client >= #{var(:chef_version)}")
+    success = in_path?("chef-client >= #{chef_version}")
 
-    if var(:server_install) == true
+    if server_install == true
       success &= in_path?("chef-server")
-      success &= in_path?("chef-solr >= #{var(:chef_version)}")
+      success &= in_path?("chef-solr >= #{chef_version}")
       success &= (web_ui_enabled? ? (chef_web_ui_running? and in_path?("chef-server-webui")) : true)
       success &= chef_server_running?
       success &= chef_rabbitmq_running?

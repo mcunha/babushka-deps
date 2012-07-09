@@ -1,22 +1,27 @@
-dep('bootstrap chef client'){
-  define_var(:chef_version, :defailt => "0.10.0", :message => "What version of Chef do you want to install?")
-
-  setup {
-    set :server_install, false
-  }
+dep('bootstrap chef client', :chef_version, :hostname, :chef_server_url, :init_style){
+  chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
+  hostname.default(shell('hostname -f'))
+  chef_server_url.ask("What is the URL of your main chef server?").default("http://chef.example.com:4000")
+  init_style.choose({
+      'init' => 'Uses init scripts that are included in the chef gem. Logs will be in /var/log/chef. Only usable with debian/ubuntu and red hat family distributions.',
+      'runit' => 'Uses runit to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
+      'bluepill' => 'Uses bluepill to set up the service.',
+      'daemontools' => 'uses daemontools to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
+      'bsd' => 'Prints a message with the chef-client command to use in rc.local.'
+    }).ask("Which init style would you like to use?")default("init")
 
   requires [
     'system',
-    'hostname',
+    'hostname'.with(:hostname_str => hostname,
     'ruby',
     'chef install dependencies.managed',
     'rubygems',
     'rubygems with no docs',
-    'gems.chef',
+    'gems.chef'.with(:chef_version => chef_version),
     'chef solo configuration.chef',
-    'chef client bootstrap configuration.chef',
+    'chef client bootstrap configuration.chef'.with(:chef_server_url => chef_server_url, :init_style => init_style),
     'chef client configuration.chef',
-    'bootstrapped chef installed.chef'
+    'bootstrapped chef installed.chef'.with(:chef_version => chef_version, :server_install => false)
   ]
 }
 
@@ -34,30 +39,26 @@ dep('chef client registered') {
   }
 }
 
-dep('chef client bootstrap configuration.chef') {
+dep('chef client bootstrap configuration.chef', :chef_server_url, :init_style) {
   require "rubygems"
   require "json"
 
-  define_var(:chef_server_url, :default => "http://chef.example.com:4000", :message => "What is the URL of your main chef server?")
-
-  define_var :init_style,
-    :message => "Which init style would you like to use?",
-    :default => 'init',
-    :choice_descriptions => {
+  chef_server_url.ask("What is the URL of your main chef server?").default("http://chef.example.com:4000")
+  init_style.choose({
       'init' => 'Uses init scripts that are included in the chef gem. Logs will be in /var/log/chef. Only usable with debian/ubuntu and red hat family distributions.',
       'runit' => 'Uses runit to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
       'bluepill' => 'Uses bluepill to set up the service.',
       'daemontools' => 'uses daemontools to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
       'bsd' => 'Prints a message with the chef-client command to use in rc.local.'
-    }
+    }).ask("Which init style would you like to use?")default("init")
 
   met?{ File.exists?(chef_json_path) }
   meet {
     json = {
       "chef"=>{
-        "server_fqdn"=> var(:chef_server_url),
+        "server_fqdn"=> chef_server_url,
         "client_interval"=>1800,
-        "init_style"=> var(:init_style)
+        "init_style"=> init_style
       },
       "recipes" => "chef-client::config"
     }.to_json
