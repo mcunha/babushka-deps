@@ -114,7 +114,7 @@ dep('chef bootstrap configuration.chef', :init_style, :hostname) {
       'bluepill' => 'Uses bluepill to set up the service.',
       'daemontools' => 'uses daemontools to set up the service. Logs will be in /etc/sv/chef-client/log/main.',
       'bsd' => 'Prints a message with the chef-client command to use in rc.local.'
-    }).ask("Which init style would you like to use?")default("init")
+    }).ask("Which init style would you like to use?").default("init")
 
   met?{ File.exists?(chef_json_path) }
   meet {
