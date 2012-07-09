@@ -140,7 +140,7 @@ dep('chef bootstrap configuration.chef', :init_style, :hostname_str) {
 dep('bootstrapped chef installed.chef', :chef_version, :server_install) {
   meet {
     log_shell "Downloading and running bootstrap",
-        "chef-solo -c /etc/chef/solo.rb -j ~/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-#{chef_version}.tar.gz",
+        "chef-solo -c /etc/chef/solo.rb -j ~/chef.json -r http://s3.amazonaws.com/chef-solo/bootstrap-latest.tar.gz",
         :spinner => true,
         :sudo => !File.writable?("/etc/chef/solo.rb")
   }
