@@ -4,6 +4,6 @@ node_name                '<%= me %>'
 client_key               '<%= knife_directory %>/<%= me %>.pem'
 validation_client_name   'chef-validator'
 validation_key           '<%= knife_directory %>/validation.pem'
-chef_server_url          'http://<%= hostname %>:4000'
+chef_server_url          '<%= chef_server_url %>'
 cache_type               'BasicFile'
 cache_options( :path => '<%= knife_directory %>/checksums' )

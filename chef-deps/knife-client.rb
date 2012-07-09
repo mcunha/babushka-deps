@@ -12,22 +12,22 @@ meta :registered do
 end
 
 # This creates a new client to be copied to your local workstation
-dep('external admin client.registered') {
-  define_var(:local_username, :default => "bob", :message => "What is your workstation username?")
+dep('external admin client.registered', :local_username) {
+  local_username.ask("What is your workstation username?").default("bob")
   
   met? {
-    shell("knife client show #{var(:local_username)}")
+    shell("knife client show #{local_username}")
   }
   
   meet {
-    shell("rm -f /tmp/#{var(:local_username)}.pem")
-    shell("knife client create #{var(:local_username)} -n -a -f /tmp/#{var(:local_username)}.pem")
+    shell("rm -f /tmp/#{local_username}.pem")
+    shell("knife client create #{local_username} -n -a -f /tmp/#{local_username}.pem")
   }
   
   after {
     log("You're client has been registered with Chef Server successfully. You now need to copy the new private key to your local workstation")
     log("Run this on your workstation:")
-    log("scp #{shell("whoami")}@#{hostname}:/tmp/#{var(:local_username)}.pem ~/.chef/#{var(:local_username)}.pem")
+    log("scp #{shell("whoami")}@#{hostname}:/tmp/#{local_username}.pem ~/.chef/#{local_username}.pem")
   }
 }
 
@@ -42,13 +42,14 @@ dep('external client.registered') {
 # This creates a new admin client on the chef server as your *deploy* user
 # This allows you to use knife to run the above commands
 dep('local admin client.registered') {
-  requires "knife client configured.knife"
+  requires "knife client configured.knife".with(:chef_server_url => "http://#{shell('hostname -f')}:4000")
 }
 
 dep('registered knife client') { requires 'knife client registered.knife'}
 
-dep('knife client configured.knife') {
-  requires "knife configuration.knife"
+dep('knife client configured.knife', :chef_git_repository_url, :chef_server_url) {
+  chef_server_url.default("http://#{shell('hostname -f')}:4000")
+  requires "knife configuration.knife".with(:chef_server_url => chef_server_url)
   
   met?{
     File.exists?(knife_directory / "#{me}.pem") and
@@ -57,11 +58,13 @@ dep('knife client configured.knife') {
   }
   
   meet {
-    shell("sudo knife configure -i --defaults -r #{var(:chef_git_repository_url)} --no-editor -y -u #{me}", :sudo => true, :as => me).p
+    shell("sudo knife configure -i --defaults -r #{chef_git_repository_url} --no-editor -y -u #{me}", :sudo => true, :as => me).p
   }
 }
 
-dep('knife configuration.knife'){
+dep('knife configuration.knife', :chef_server_url){
+  chef_server_url.default!("http://#{shell('hostname -f')}:4000")
+
   requires [
     'chef server keys.knife'
   ]
