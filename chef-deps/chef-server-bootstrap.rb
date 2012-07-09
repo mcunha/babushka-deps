@@ -38,18 +38,18 @@ meta :chef do
   end
 end
 
-dep('bootstrap chef server with rubygems', :chef_version, :hostname) {
+dep('bootstrap chef server with rubygems', :chef_version, :hostname_str) {
   chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
-  hostname.default(shell('hostname -f'))
+  hostname_str.default(shell('hostname -f'))
   requires [
-    'hostname'.with(:hostname_str => hostname),
+    'hostname'.with(:hostname_str => hostname_str),
     'ruby',
     'chef install dependencies.managed',
     'rubygems',
     'rubygems with no docs',
     'gems.chef'.with(:chef_version => chef_version),
     'chef solo configuration.chef',
-    'chef bootstrap configuration.chef'.with(:hostname => hostname),
+    'chef bootstrap configuration.chef'.with(:hostname_str => hostname_str),
     'bootstrapped chef installed.chef'.with(:chef_version => chef_version, :server_install => true),
     'local admin client.registered'
   ]
@@ -59,10 +59,10 @@ dep('bootstrap chef server with rubygems', :chef_version, :hostname) {
   }
 }
 
-dep('bootstrapped chef', :chef_version, :hostname) { 
+dep('bootstrapped chef', :chef_version, :hostname_str) { 
   chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
-  hostname.default(shell('hostname -f'))
-  requires 'bootstrap chef server with rubygems'.with(:chef_version => chef_version, :hostaname => hostname)
+  hostname_str.default(shell('hostname -f'))
+  requires 'bootstrap chef server with rubygems'.with(:chef_version => chef_version, :hostname_str => hostname_str)
 }
 
 dep('rubygems with no docs') {
@@ -103,8 +103,8 @@ dep('chef solo configuration.chef') {
   }
 }
 
-dep('chef bootstrap configuration.chef', :init_style, :hostname) {
-  hostname.default(shell('hostname -f'))
+dep('chef bootstrap configuration.chef', :init_style, :hostname_str) {
+  hostname_str.default(shell('hostname -f'))
   require "rubygems"
   require "json"
 
@@ -121,7 +121,7 @@ dep('chef bootstrap configuration.chef', :init_style, :hostname) {
     json = {
       "chef"=>{
         "server_url"=>"http://localhost:4000",
-        "server_fqdn"=> hostname,
+        "server_fqdn"=> hostname_str,
         "webui_enabled"=> web_ui_enabled?,
         "init_style"=> init_style,
         "client_interval"=>1800

@@ -1,6 +1,6 @@
-dep('bootstrap chef client', :chef_version, :hostname, :chef_server_url, :init_style){
+dep('bootstrap chef client', :chef_version, :hostname_str, :chef_server_url, :init_style){
   chef_version.ask("What version of Chef do you want to install?").default("0.10.10")
-  hostname.default(shell('hostname -f'))
+  hostname_str.default(shell('hostname -f'))
   chef_server_url.ask("What is the URL of your main chef server?").default("http://chef.example.com:4000")
   init_style.choose({
       'init' => 'Uses init scripts that are included in the chef gem. Logs will be in /var/log/chef. Only usable with debian/ubuntu and red hat family distributions.',
@@ -12,7 +12,7 @@ dep('bootstrap chef client', :chef_version, :hostname, :chef_server_url, :init_s
 
   requires [
     'system',
-    'hostname'.with(:hostname_str => hostname),
+    'hostname'.with(:hostname_str => hostname_str),
     'ruby',
     'chef install dependencies.managed',
     'rubygems',
