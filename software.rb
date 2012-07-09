@@ -1,6 +1,6 @@
 dep 'core software' do
   requires {
-    on :linux, 'vim.managed', 'curl.managed', 'htop.managed', 'jnettop.managed', 'screen.managed', 'nmap.managed', 'tree.managed'
+    on :linux, 'vim.managed', 'curl.bin', 'htop.managed', 'jnettop.managed', 'screen.managed', 'nmap.managed', 'tree.managed'
   }
 end
 

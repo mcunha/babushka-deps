@@ -1,5 +1,5 @@
 def ssh_conf_path file
-  "/etc#{'/ssh' if Babushka::Base.host.linux?}/#{file}_config"
+  "/etc#{'/ssh' if Babushka.host.linux?}/#{file}_config"
 end
 
 dep 'system', :hostname_str do
@@ -14,7 +14,7 @@ dep 'secured system' do
 end
 
 dep 'tmp cleaning grace period', :for => :ubuntu do
-  met? { !grep(/^[^#]*TMPTIME=0/, "/etc/default/rcS") }
+  met? { !"/etc/default/rcS".p.grep(/^[^#]*TMPTIME=0/) }
   meet { change_line "TMPTIME=0", "TMPTIME=30", "/etc/default/rcS" }
 end
 
@@ -22,7 +22,7 @@ dep 'secured ssh logins' do
   requires ['sshd.managed'] #, 'passwordless ssh logins']
   met? {
     # -o NumberOfPasswordPrompts=0
-    output = failable_shell('ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no nonexistentuser@localhost').stderr
+    output = raw_shell('ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no nonexistentuser@localhost').stderr
     if output.downcase['connection refused']
       log_ok "sshd doesn't seem to be running."
     elsif (auth_methods = output.scan(/Permission denied \((.*)\)\./).join.split(/[^a-z]+/)).empty?
@@ -34,13 +34,19 @@ dep 'secured ssh logins' do
     end
   }
   meet {
-    change_with_sed 'PasswordAuthentication',          'yes', 'no', ssh_conf_path(:sshd)
-    change_with_sed 'ChallengeResponseAuthentication', 'yes', 'no', ssh_conf_path(:sshd)
+    shell("sed -i '' -e 's/^PasswordAuthentication\\s+\\w+\\b//' '/etc/ssh/sshd_config'")
+    shell("sed -i '' -e 's/^ChallengeResponseAuthentication\\s+\\w+\\b//' '/etc/ssh/sshd_config'")
+    '/etc/ssh/sshd_config'.p.append("PasswordAuthentication no")
+    '/etc/ssh/sshd_config'.p.append("ChallengeResponseAuthentication no")
   }
   after { sudo "/etc/init.d/ssh restart" }
 end
 
-dep 'lax host key checking' do
-  met? { grep /^StrictHostKeyChecking[ \t]+no/, ssh_conf_path(:ssh) }
-  meet { change_with_sed 'StrictHostKeyChecking', 'yes', 'no', ssh_conf_path(:ssh) }
+dep 'lax host key checking', :ssh do
+  ssh.default!('ssh')
+  met? { ssh_conf_path(ssh).p.grep /^StrictHostKeyChecking[ \t]+no/ }
+  meet { 
+    shell("sed -i '' -e 's/^StrictHostKeyChecking\\s+\\w+\\b//' #{ssh_conf_path(ssh)}") 
+    ssh_conf_path(ssh).p.append("StrictHostKeyChecking no")
+  }
 end
