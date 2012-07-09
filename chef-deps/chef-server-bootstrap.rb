@@ -77,6 +77,7 @@ dep('rubygems with no docs') {
 }
 
 dep('chef install dependencies.managed') {
+  requires 'ruby headers.managed'
   installs %w[build-essential wget ssl-cert]
   provides %w[wget make gcc]
 }

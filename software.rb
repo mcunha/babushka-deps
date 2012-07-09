@@ -11,6 +11,13 @@ dep 'wget.managed' do
   provides "wget"
 end
 
+def 'ruby headers.managed' do
+  installs {
+    via :apt, 'ruby-dev'
+  }
+  provides []
+end
+
 dep('vim.managed') {
   installs {
     via :apt, 'vim'
