@@ -86,7 +86,7 @@ dep('gems.chef', :chef_version) {
 }
 
 dep('chef.gem', :chef_version){
-  chef_version.default!(0.10.10)
+  chef_version.default!('0.10.10')
   installs "chef #{chef_version}"
   provides 'chef-client'
 }
