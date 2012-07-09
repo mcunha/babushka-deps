@@ -12,7 +12,7 @@ dep('bootstrap chef client', :chef_version, :hostname, :chef_server_url, :init_s
 
   requires [
     'system',
-    'hostname'.with(:hostname_str => hostname,
+    'hostname'.with(:hostname_str => hostname),
     'ruby',
     'chef install dependencies.managed',
     'rubygems',
