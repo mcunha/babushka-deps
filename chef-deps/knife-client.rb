@@ -27,7 +27,7 @@ dep('external admin client.registered', :local_username) {
   after {
     log("You're client has been registered with Chef Server successfully. You now need to copy the new private key to your local workstation")
     log("Run this on your workstation:")
-    log("scp #{shell("whoami")}@#{hostname}:/tmp/#{local_username}.pem ~/.chef/#{local_username}.pem")
+    log("scp #{shell("whoami")}@#{shell('hostname -f')}:/tmp/#{local_username}.pem ~/.chef/#{local_username}.pem")
   }
 }
 
