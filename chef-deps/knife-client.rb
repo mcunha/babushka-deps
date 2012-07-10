@@ -21,7 +21,7 @@ dep('external admin client.registered', :local_username) {
   
   meet {
     shell("rm -f /tmp/#{local_username}.pem")
-    shell("knife client create #{local_username} -n -a -f /tmp/#{local_username}.pem")
+    shell("knife client create #{local_username} -d -a -f /tmp/#{local_username}.pem")
   }
   
   after {
