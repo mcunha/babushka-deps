@@ -58,7 +58,7 @@ dep('knife client configured.knife', :chef_git_repository_url, :chef_server_url)
   }
   
   meet {
-    shell("sudo knife configure -i --defaults -r #{chef_git_repository_url} --no-editor -y -u #{me}", :sudo => true, :as => me).p
+    shell("sudo knife configure -i --defaults -r #{chef_git_repository_url} --disable-editing -y -u #{me}", :sudo => true, :as => me).p
   }
 }
 
