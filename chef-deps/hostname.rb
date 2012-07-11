@@ -5,7 +5,7 @@ dep 'hostname', :hostname_str, :for => :linux do
   end
   met? {
     stored_hostname = '/etc/hostname'.p.read
-    !stored_hostname.blank? && hostname == stored_hostname
+    !stored_hostname.blank? && myhostname == stored_hostname
   }
   meet {
     sudo "echo #{myhostname} > /etc/hostname"
