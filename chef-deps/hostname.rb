@@ -1,7 +1,7 @@
 dep 'hostname', :hostname_str, :for => :linux do
   hostname_str.default(shell('hostname -f'))
   def myhostname
-    hostname_str
+    hostname_str.to_s
   end
   met? {
     stored_hostname = '/etc/hostname'.p.read
