@@ -34,10 +34,10 @@ dep 'secured ssh logins' do
     end
   }
   meet {
-    shell("sed -i '' -e 's/^PasswordAuthentication\\s+\\w+\\b//' '/etc/ssh/sshd_config'")
-    shell("sed -i '' -e 's/^ChallengeResponseAuthentication\\s+\\w+\\b//' '/etc/ssh/sshd_config'")
-    '/etc/ssh/sshd_config'.p.append("PasswordAuthentication no")
-    '/etc/ssh/sshd_config'.p.append("ChallengeResponseAuthentication no")
+    shell("sed -i '' -e 's/^PasswordAuthentication\\s+.+//' '/etc/ssh/sshd_config'")
+    shell("sed -i '' -e 's/^ChallengeResponseAuthentication\\s+.+//' '/etc/ssh/sshd_config'")
+    '/etc/ssh/sshd_config'.p.append("PasswordAuthentication no\n")
+    '/etc/ssh/sshd_config'.p.append("ChallengeResponseAuthentication no\n")
   }
   after { sudo "/etc/init.d/ssh restart" }
 end
@@ -46,7 +46,7 @@ dep 'lax host key checking', :ssh do
   ssh.default!('ssh')
   met? { ssh_conf_path(ssh).p.grep /^StrictHostKeyChecking[ \t]+no/ }
   meet { 
-    shell("sed -i '' -e 's/^StrictHostKeyChecking\\s+\\w+\\b//' #{ssh_conf_path(ssh)}") 
-    ssh_conf_path(ssh).p.append("StrictHostKeyChecking no")
+    shell("sed -i '' -e 's/^\\s*StrictHostKeyChecking\\s+.+//' #{ssh_conf_path(ssh)}") 
+    ssh_conf_path(ssh).p.append("StrictHostKeyChecking no\n")
   }
 end
