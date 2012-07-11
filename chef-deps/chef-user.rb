@@ -75,7 +75,7 @@ dep 'user exists with password', :username, :password do
   on :linux do
     met? { shell('sudo cat /etc/shadow')[/^#{username}:[^\*!]/] }
     meet {
-      sudo "echo -e '#{password}\n#{password}' | passwd #{username}"
+      sudo "chpasswd '#{username}:#{password}'"
     }
   end
 end
