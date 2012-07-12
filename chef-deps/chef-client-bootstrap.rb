@@ -20,7 +20,7 @@ dep('bootstrap chef client', :chef_version, :hostname_str, :chef_server_url, :in
     'gems.chef'.with(:chef_version => chef_version),
     'chef solo configuration.chef',
     'chef client bootstrap configuration.chef'.with(:chef_server_url => chef_server_url, :init_style => init_style),
-    'chef client configuration.chef',
+    'chef client configuration.chef'.with(:chef_server_url => chef_server_url),
     'bootstrapped chef installed.chef'.with(:chef_version => chef_version, :server_install => false)
   ]
 }
@@ -70,7 +70,8 @@ dep('chef client bootstrap configuration.chef', :chef_server_url, :init_style) {
   }
 }
 
-dep('chef client configuration.chef'){
+dep('chef client configuration.chef', :chef_server_url){
+  chef_server_url.ask("What is the URL of your main chef server?").default?("http://chef.example.com:4000")
   met?{ File.exists?("/etc/chef/client.rb") }
   meet {
     shell("mkdir -p /etc/chef", :sudo => true)

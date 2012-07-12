@@ -1,9 +1,10 @@
-dep 'chef user' do
+dep 'chef user', :username do
+  username.default!("deploy")
   requires [
     'system',
     'admins can sudo',
     'user exists with password',
-    'can sudo without password',
+    'can sudo without password'.with(:username => username),
     'passwordless ssh logins',
     'secured system'
   ]
