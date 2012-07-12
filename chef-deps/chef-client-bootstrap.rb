@@ -71,7 +71,7 @@ dep('chef client bootstrap configuration.chef', :chef_server_url, :init_style) {
 }
 
 dep('chef client configuration.chef', :chef_server_url){
-  chef_server_url.ask("What is the URL of your main chef server?").default?("http://chef.example.com:4000")
+  chef_server_url.ask("What is the URL of your main chef server?").default("http://chef.example.com:4000")
   met?{ File.exists?("/etc/chef/client.rb") }
   meet {
     shell("mkdir -p /etc/chef", :sudo => true)
